@@ -7,9 +7,12 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
+    this.ambientGain = null;
+    this.sfxGain = null;
     this.analyser = null;
     this.isMuted = false;
     this.isInitialized = false;
+    this.timerRunning = false;
 
     // Active sound generators
     this.tracks = {
@@ -54,6 +57,17 @@ class AudioEngine {
     this.masterGain = this.ctx.createGain();
     this.masterGain.gain.setValueAtTime(0.75, this.ctx.currentTime);
 
+    // Ambient Sub-Bus (Strictly muted by default if timer is not running)
+    this.ambientGain = this.ctx.createGain();
+    const initialAmbientVol = this.timerRunning ? 1.0 : 0.0;
+    this.ambientGain.gain.setValueAtTime(initialAmbientVol, this.ctx.currentTime);
+    this.ambientGain.connect(this.masterGain);
+
+    // SFX Sub-Bus (for chimes & notifications)
+    this.sfxGain = this.ctx.createGain();
+    this.sfxGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+    this.sfxGain.connect(this.masterGain);
+
     // Analyser Node for visualizer
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 64;
@@ -67,12 +81,57 @@ class AudioEngine {
 
     this.isInitialized = true;
 
-    // Start initially active tracks
+    // Start configured tracks in audio graph (ambientGain keeps them silent until timer starts)
     Object.keys(this.tracks).forEach(trackName => {
       if (this.tracks[trackName].active) {
         this.startTrack(trackName);
       }
     });
+  }
+
+  /**
+   * Called when timer starts, pauses, or resets
+   */
+  onTimerStateChange(isRunning) {
+    this.timerRunning = isRunning;
+    if (!this.isInitialized) {
+      if (isRunning) this.init();
+      return;
+    }
+    if (!this.ambientGain || !this.ctx) return;
+
+    if (this.ctx.state === 'suspended' && isRunning) {
+      this.ctx.resume();
+    }
+
+    const now = this.ctx.currentTime;
+    this.ambientGain.gain.cancelScheduledValues(now);
+    this.ambientGain.gain.setValueAtTime(this.ambientGain.gain.value, now);
+
+    if (isRunning) {
+      // Smooth fade in
+      this.ambientGain.gain.linearRampToValueAtTime(1.0, now + 0.35);
+
+      // Start particle audio loops if active
+      if (this.tracks.rain.active && this.tracks.rain.nodes && !this.rainDropTimer) {
+        this.scheduleRainDrops(this.tracks.rain.nodes.gain);
+      }
+      if (this.tracks.fire.active && this.tracks.fire.nodes && !this.fireCrackleTimer) {
+        this.scheduleFireCrackle(this.tracks.fire.nodes.gain);
+      }
+    } else {
+      // Hard complete mute when timer is not running
+      this.ambientGain.gain.linearRampToValueAtTime(0.0, now + 0.2);
+
+      if (this.rainDropTimer) {
+        clearTimeout(this.rainDropTimer);
+        this.rainDropTimer = null;
+      }
+      if (this.fireCrackleTimer) {
+        clearTimeout(this.fireCrackleTimer);
+        this.fireCrackleTimer = null;
+      }
+    }
   }
 
   /**
@@ -137,7 +196,8 @@ class AudioEngine {
     gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(Math.max(0.001, targetVol), this.ctx.currentTime + 0.5);
 
-    gain.connect(this.masterGain);
+    // Route through ambient sub-bus
+    gain.connect(this.ambientGain || this.masterGain);
 
     if (name === 'rain') {
       // Pink noise through bandpass
@@ -151,8 +211,10 @@ class AudioEngine {
       filter.connect(gain);
       noise.start(0);
 
-      // Raindrop scheduler
-      this.scheduleRainDrops(gain);
+      // Raindrop scheduler only if timer is running
+      if (this.timerRunning) {
+        this.scheduleRainDrops(gain);
+      }
 
       this.tracks.rain.nodes = { noise, filter, gain };
 
@@ -167,8 +229,10 @@ class AudioEngine {
       filter.connect(gain);
       noise.start(0);
 
-      // Crackle & pop scheduler
-      this.scheduleFireCrackle(gain);
+      // Crackle & pop scheduler only if timer is running
+      if (this.timerRunning) {
+        this.scheduleFireCrackle(gain);
+      }
 
       this.tracks.fire.nodes = { noise, filter, gain };
 
@@ -320,10 +384,13 @@ class AudioEngine {
    * Procedural micro raindrop impulses
    */
   scheduleRainDrops(parentGain) {
-    if (!this.tracks.rain.active || !this.ctx) return;
+    if (!this.timerRunning || !this.tracks.rain.active || !this.ctx) return;
 
     const playDrop = () => {
-      if (!this.tracks.rain.active || !this.ctx) return;
+      if (!this.timerRunning || !this.tracks.rain.active || !this.ctx) {
+        this.rainDropTimer = null;
+        return;
+      }
 
       const osc = this.ctx.createOscillator();
       const dropGain = this.ctx.createGain();
@@ -355,10 +422,13 @@ class AudioEngine {
    * Procedural fireplace crackle & wood pops
    */
   scheduleFireCrackle(parentGain) {
-    if (!this.tracks.fire.active || !this.ctx) return;
+    if (!this.timerRunning || !this.tracks.fire.active || !this.ctx) return;
 
     const playCrackle = () => {
-      if (!this.tracks.fire.active || !this.ctx) return;
+      if (!this.timerRunning || !this.tracks.fire.active || !this.ctx) {
+        this.fireCrackleTimer = null;
+        return;
+      }
 
       const isPop = Math.random() > 0.65;
       
@@ -521,7 +591,7 @@ class AudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain || this.masterGain);
 
       osc.start(this.ctx.currentTime);
       osc.stop(this.ctx.currentTime + duration);
@@ -548,7 +618,7 @@ class AudioEngine {
       gain.gain.exponentialRampToValueAtTime(0.0001, startT + 0.35);
 
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain || this.masterGain);
 
       osc.start(startT);
       osc.stop(startT + 0.36);

@@ -106,6 +106,11 @@ class PomodoroTimer {
     this.isRunning = true;
     this.lastTimestamp = Date.now();
 
+    // Trigger ambient audio when timer starts
+    if (window.zenAudio) {
+      window.zenAudio.onTimerStateChange(true);
+    }
+
     this.playIcon.classList.add('hidden');
     this.pauseIcon.classList.remove('hidden');
     this.subStatus.textContent = 'Focusing...';
@@ -133,6 +138,12 @@ class PomodoroTimer {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+
+    // Stop ambient audio when timer pauses
+    if (window.zenAudio) {
+      window.zenAudio.onTimerStateChange(false);
+    }
+
     this.playIcon.classList.remove('hidden');
     this.pauseIcon.classList.add('hidden');
     this.subStatus.textContent = 'Paused';
@@ -140,6 +151,9 @@ class PomodoroTimer {
 
   resetTimer() {
     this.pause();
+    if (window.zenAudio) {
+      window.zenAudio.onTimerStateChange(false);
+    }
     this.remainingSeconds = this.totalDuration;
     this.subStatus.textContent = 'Ready';
     this.updateDisplay();
