@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZenPulse — Ambient Soundscape & Focus Studio</title>
+  <meta name="description" content="Immersive procedural soundscapes, aesthetic Pomodoro timer, and distraction-free task studio for deep focus.">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Ambient Background Canvas & Glow Orbs -->
+  <canvas id="ambientCanvas" class="ambient-canvas"></canvas>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- App Wrapper -->
+  <div class="app-container" id="appContainer">
+    
+    <!-- Top Navigation / Header -->
+    <header class="app-header" id="appHeader">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>ZenPulse</h1>
+          <span class="badge">Focus Studio</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Soundscape Presets Bar -->
+        <div class="presets-group" id="presetsGroup">
+          <span class="presets-label">Presets:</span>
+          <button class="preset-chip active" data-preset="study">Deep Study</button>
+          <button class="preset-chip" data-preset="rainy-cabin">Rainy Cabin</button>
+          <button class="preset-chip" data-preset="campfire">Campfire Night</button>
+          <button class="preset-chip" data-preset="waves">Zen Ocean</button>
+          <button class="preset-chip" data-preset="clear">Mute All</button>
+        </div>
+
+        <div class="header-actions">
+          <!-- Theme Switcher -->
+          <div class="dropdown-wrapper">
+            <button class="icon-btn" id="themeBtn" title="Change Theme" aria-label="Change Theme">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v2"></path>
+                <path d="M12 20v2"></path>
+                <path d="m4.93 4.93 1.41 1.41"></path>
+                <path d="m17.66 17.66 1.41 1.41"></path>
+                <path d="M2 12h2"></path>
+                <path d="M20 12h2"></path>
+                <path d="m6.34 17.66-1.41 1.41"></path>
+                <path d="m19.07 4.93-1.41 1.41"></path>
+              </svg>
+            </button>
+            <div class="dropdown-menu theme-menu" id="themeMenu">
+              <button class="theme-option active" data-theme="midnight"><span class="theme-color midnight"></span>Midnight Velvet</button>
+              <button class="theme-option" data-theme="emerald"><span class="theme-color emerald"></span>Emerald Sanctuary</button>
+              <button class="theme-option" data-theme="cyber"><span class="theme-color cyber"></span>Cyber Sunset</button>
+              <button class="theme-option" data-theme="frost"><span class="theme-color frost"></span>Arctic Frost</button>
+              <button class="theme-option" data-theme="obsidian"><span class="theme-color obsidian"></span>Pure Obsidian</button>
+            </div>
+          </div>
+
+          <!-- Zen Mode Toggle -->
+          <button class="icon-btn" id="zenToggleBtn" title="Zen Mode (Z)" aria-label="Toggle Zen Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+
+          <!-- Audio Engine Master Toggle -->
+          <button class="icon-btn master-audio-btn" id="masterAudioBtn" title="Master Audio (M)" aria-label="Toggle Sound Engine">
+            <svg id="audioIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="audioIconOff" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-grid" id="mainGrid">
+      
+      <!-- Left Panel: Soundscape Mixer -->
+      <section class="card glass-card sound-mixer-panel" id="soundMixerPanel">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            <h2>Soundscapes</h2>
+          </div>
+          <div class="master-volume-wrap">
+            <label for="masterVolume" title="Master Volume">Master</label>
+            <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.75" class="custom-slider" aria-label="Master Volume">
+          </div>
+        </div>
+
+        <div class="sound-tracks-list" id="soundTracksList">
+          
+          <!-- Rain Track -->
+          <div class="sound-track-item active" data-sound="rain">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                  <path d="M8 19v2"></path>
+                  <path d="M8 13v2"></path>
+                  <path d="M16 19v2"></path>
+                  <path d="M16 13v2"></path>
+                  <path d="M12 21v2"></path>
+                  <path d="M12 15v2"></path>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Gentle Rain & Drops</span>
+                <span class="sound-desc">Procedural raindrops & shower</span>
+              </div>
+              <button class="track-toggle-btn active" data-sound="rain" aria-label="Toggle Rain">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="rain" min="0" max="1" step="0.01" value="0.4" aria-label="Rain Volume">
+              <span class="volume-val">40%</span>
+            </div>
+          </div>
+
+          <!-- Fireplace Track -->
+          <div class="sound-track-item" data-sound="fire">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Cozy Fireplace</span>
+                <span class="sound-desc">Warm hearth & wood crackle</span>
+              </div>
+              <button class="track-toggle-btn" data-sound="fire" aria-label="Toggle Fireplace">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="fire" min="0" max="1" step="0.01" value="0.35" aria-label="Fireplace Volume">
+              <span class="volume-val">35%</span>
+            </div>
+          </div>
+
+          <!-- Binaural Focus Track -->
+          <div class="sound-track-item active" data-sound="binaural">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Alpha Beats (10Hz)</span>
+                <span class="sound-desc">Deep flow & cognitive resonance</span>
+              </div>
+              <button class="track-toggle-btn active" data-sound="binaural" aria-label="Toggle Binaural Beats">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="binaural" min="0" max="1" step="0.01" value="0.3" aria-label="Binaural Beats Volume">
+              <span class="volume-val">30%</span>
+            </div>
+          </div>
+
+          <!-- Forest Breeze Track -->
+          <div class="sound-track-item" data-sound="wind">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path>
+                  <path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path>
+                  <path d="M12.6 19.4A2 2 0 1 0 14 16H2"></path>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Forest Wind</span>
+                <span class="sound-desc">Breathing gusts & treetop air</span>
+              </div>
+              <button class="track-toggle-btn" data-sound="wind" aria-label="Toggle Forest Wind">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="wind" min="0" max="1" step="0.01" value="0.25" aria-label="Wind Volume">
+              <span class="volume-val">25%</span>
+            </div>
+          </div>
+
+          <!-- Ocean Waves Track -->
+          <div class="sound-track-item" data-sound="ocean">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                  <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                  <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Zen Ocean Swell</span>
+                <span class="sound-desc">Rhythmic surf & tidal ebb</span>
+              </div>
+              <button class="track-toggle-btn" data-sound="ocean" aria-label="Toggle Ocean Waves">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="ocean" min="0" max="1" step="0.01" value="0.3" aria-label="Ocean Volume">
+              <span class="volume-val">30%</span>
+            </div>
+          </div>
+
+          <!-- Pink Noise Track -->
+          <div class="sound-track-item" data-sound="noise">
+            <div class="sound-info">
+              <div class="sound-icon-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="20" x2="12" y2="10"></line>
+                  <line x1="18" y1="20" x2="18" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="16"></line>
+                </svg>
+              </div>
+              <div class="sound-meta">
+                <span class="sound-name">Pink Noise Mask</span>
+                <span class="sound-desc">Balanced focus static (1/f)</span>
+              </div>
+              <button class="track-toggle-btn" data-sound="noise" aria-label="Toggle Pink Noise">
+                <span class="toggle-indicator"></span>
+              </button>
+            </div>
+            <div class="sound-slider-row">
+              <input type="range" class="sound-slider" data-sound="noise" min="0" max="1" step="0.01" value="0.2" aria-label="Pink Noise Volume">
+              <span class="volume-val">20%</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Center Panel: Pomodoro Studio & Aura Visualizer -->
+      <section class="center-focus-panel" id="centerFocusPanel">
+        
+        <!-- Mode Tabs -->
+        <div class="timer-mode-selector">
+          <button class="mode-btn active" data-mode="focus">Deep Focus (25m)</button>
+          <button class="mode-btn" data-mode="shortBreak">Short Break (5m)</button>
+          <button class="mode-btn" data-mode="longBreak">Long Break (15m)</button>
+        </div>
+
+        <!-- Timer Dial -->
+        <div class="timer-dial-container">
+          <div class="timer-glow-backdrop"></div>
+          
+          <svg class="timer-svg" viewBox="0 0 320 320">
+            <defs>
+              <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="var(--accent-primary)"></stop>
+                <stop offset="100%" stop-color="var(--accent-secondary)"></stop>
+              </linearGradient>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <!-- Background Track -->
+            <circle class="timer-circle-bg" cx="160" cy="160" r="140"></circle>
+            <!-- Animated Progress Track -->
+            <circle id="timerProgressCircle" class="timer-circle-progress" cx="160" cy="160" r="140" stroke="url(#timerGradient)" filter="url(#glow)"></circle>
+          </svg>
+
+          <!-- Inner Content -->
+          <div class="timer-display-content">
+            <span class="session-badge" id="sessionLabel">FOCUS SESSION</span>
+            <div class="time-readout" id="timerReadout">25:00</div>
+            <div class="sub-status" id="subStatus">Space to Start</div>
+          </div>
+        </div>
+
+        <!-- Timer Controls Bar -->
+        <div class="timer-controls">
+          <button class="ctrl-btn reset-btn" id="resetBtn" title="Reset Session">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          </button>
+
+          <button class="ctrl-btn main-play-btn" id="playPauseBtn" title="Start Focus (Space)">
+            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="6 4 20 12 6 20 6 4"></polygon>
+            </svg>
+            <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+          </button>
+
+          <button class="ctrl-btn skip-btn" id="skipBtn" title="Skip to Next Session">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 4 15 12 5 20 5 4"></polygon>
+              <line x1="19" y1="5" x2="19" y2="19"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Session Streak Counter -->
+        <div class="session-stats">
+          <div class="stat-pill">
+            <span class="stat-icon">🔥</span>
+            <span class="stat-text"><strong id="completedSessionsCount">0</strong> Sessions Today</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-icon">⏱️</span>
+            <span class="stat-text"><strong id="totalFocusMinutes">0</strong>m Total Focus</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Panel: Tasks & Focus Checklist -->
+      <section class="card glass-card tasks-panel" id="tasksPanel">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <h2>Focus Tasks</h2>
+          </div>
+          <span class="task-counter" id="taskProgressBadge">0/0</span>
+        </div>
+
+        <!-- New Task Form -->
+        <form class="task-input-form" id="taskForm">
+          <input type="text" id="taskInput" placeholder="What will you accomplish?" autocomplete="off" maxlength="80">
+          <button type="submit" class="add-task-btn" title="Add Task">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Tasks List -->
+        <div class="tasks-list-container" id="tasksList">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Ambient Mini Quotes / Inspiration -->
+        <div class="focus-quote" id="focusQuote">
+          "Focus is a muscle. The quiet mind creates the clearest thoughts."
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Zen Mode Exit Button (Only visible in Zen mode) -->
+    <button class="zen-exit-btn hidden" id="zenExitBtn" title="Exit Zen Mode (Esc or Z)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      <span>Exit Zen Mode</span>
+    </button>
+
+    <!-- Keyboard Shortcut Help Footer -->
+    <footer class="app-footer" id="appFooter">
+      <div class="shortcuts-row">
+        <span><kbd>Space</kbd> Play / Pause</span>
+        <span><kbd>M</kbd> Master Audio</span>
+        <span><kbd>Z</kbd> Zen Mode</span>
+        <span><kbd>1-4</kbd> Presets</span>
+      </div>
+      <div class="footer-note">
+        100% Client-Side Web Audio Synthesis &bull; No Tracking
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Audio, Logic & App Scripts -->
+  <script src="js/audio-engine.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/timer.js"></script>
+  <script src="js/tasks.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
