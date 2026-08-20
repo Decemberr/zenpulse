@@ -1,7 +1,8 @@
-﻿# 🎧 ZenPulse — Ambient Soundscape & Focus Studio
+# 🎧 ZenPulse — Ambient Soundscape & Focus Studio
 
 > An aesthetic, browser-based ambient audio mixer and Pomodoro focus studio with zero dependencies and 100% procedural Web Audio synthesis.
 
+![ZenPulse Preview](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
@@ -17,7 +18,7 @@
   - **Binaural Beats**: Left/right ear frequency phase offset (10Hz Alpha resonance) + warm sub-bass drone.
   - **Forest Wind**: LFO-modulated breathing gusts and treetop breezes.
   - **Zen Ocean**: Lowpass-filtered swells simulating tidal ebb and flow.
-  - **Pink Noise**: Balanced 1/f focus mask static.
+  - **Pink Noise**: Balanced $1/f$ focus mask static.
 - **⏱️ Glowing Pomodoro Timer**:
   - Modes: Deep Focus (25m), Short Break (5m), Long Break (15m).
   - SVG glowing circular progress ring with gradient trail.
@@ -26,27 +27,27 @@
 - **🌌 Audio-Reactive Aura & Constellation Visualizer**:
   - HTML5 canvas particle field that dynamically reacts to active audio levels.
 - **📝 Focus Task Checklist**:
-  - Minimalist task manager with completion micro-chimes and localStorage persistence.
-- **�� 5 Glassmorphism Dark-Mode Themes**:
+  - Minimalist task manager with completion micro-chimes and `localStorage` persistence.
+- **🎨 5 Glassmorphism Dark-Mode Themes**:
   - *Midnight Velvet*, *Emerald Sanctuary*, *Cyber Sunset*, *Arctic Frost*, and *Pure Obsidian*.
-- **⚡ Distraction-Free Zen Mode (Z)**:
+- **⚡ Distraction-Free Zen Mode (`Z`)**:
   - Hides sidebars to leave only the glowing timer and breathing aura.
 
 ---
 
 ## 🚀 Quick Start
 
-No dependencies or build steps required. Simply open \index.html\ in any modern web browser or serve it locally:
+No dependencies or build steps required. Simply open `index.html` in any modern web browser or serve it locally:
 
-\\\ash
+```bash
 # Using Python
 python -m http.server 3000
 
-# Or using Node.js
+# Or using Node.js / npx
 npx serve .
-\\\
+```
 
-Then visit \http://localhost:3000\.
+Then visit `http://localhost:3000`.
 
 ---
 
@@ -64,4 +65,4 @@ Then visit \http://localhost:3000\.
 
 ## 📄 License
 
-MIT License © 2026
+MIT License &copy; 2026
